@@ -92,7 +92,8 @@ func (p *Proxy) serveConnect(w http.ResponseWriter, r *http.Request) {
 	ch := make(chan int)
 	clientConnFastClose := &onCloseConn{clientConn, func() { ch <- 0 }}
 	// слушатель, который принимает только одно соединение и затем считается закрытым.
-	http.Serve(&oneShotListener{clientConnFastClose}, p.Wrap(reverseProxy))
+	// http.Serve(&oneShotListener{clientConnFastClose}, p.Wrap(reverseProxy))
+	http.Serve(&oneShotListener{clientConnFastClose}, reverseProxy)
 	<-ch
 }
 
@@ -104,7 +105,6 @@ func connectClient(w http.ResponseWriter, config *tls.Config) (net.Conn, error) 
 		return nil, err
 	}
 	// Ответ ОК перед установлением TLS соединения
-	log.Printf("resp OK to client")
 	if _, err = rawClientConn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n")); err != nil {
 		rawClientConn.Close()
 		return nil, err
@@ -153,7 +153,7 @@ type oneShotListener struct {
 
 func (l *oneShotListener) Accept() (net.Conn, error) {
 	if l.clientConn == nil {
-		return nil, errors.New("closed")
+		return nil, errors.New("closed >>")
 	}
 	clientConn := l.clientConn
 	l.clientConn = nil

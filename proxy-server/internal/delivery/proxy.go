@@ -10,9 +10,6 @@ import (
 // Forward proxy
 // - подменяет сертификат для каждого соединения
 type Proxy struct {
-	// перехват запроса
-	Wrap func(upstream http.Handler) http.Handler
-
 	// - корневой сертификат
 	// - подписывает сертификаты под каждый сервер назначения
 	CA *tls.Certificate
@@ -38,7 +35,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Director:      httpDirector,
 		FlushInterval: p.FlushInterval,
 	}
-	p.Wrap(reverseProxy).ServeHTTP(w, r)
+	reverseProxy.ServeHTTP(w, r)
 }
 
 func httpDirector(r *http.Request) {

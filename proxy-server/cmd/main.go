@@ -26,7 +26,10 @@ var (
 )
 
 func main() {
-	client, closeConn := mongoclient.NewMongoClient(URI)
+	client, closeConn, err := mongoclient.NewMongoClient(URI)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer closeConn()
 	repo, err := repository.NewRepository(client)
 	if err != nil {
@@ -39,16 +42,19 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	proxyHandler := &delivery.Proxy{
 		CA: &ca,
 		TLSServerConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12,
 			//CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA},
 		},
-		Wrap: middleware.Save,
 	}
+
+	chainHandlers := middleware.Log(middleware.Save(proxyHandler))
+
 	log.Println("listen :8080")
-	log.Fatal(http.ListenAndServe(":8080", proxyHandler))
+	log.Fatal(http.ListenAndServe(":8080", chainHandlers))
 }
 
 func loadCA() (cert tls.Certificate, err error) {
