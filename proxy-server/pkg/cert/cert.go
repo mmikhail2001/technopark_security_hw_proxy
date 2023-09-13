@@ -1,4 +1,4 @@
-package mitm
+package cert
 
 import (
 	"crypto/ecdsa"
@@ -29,7 +29,7 @@ const (
 	leafUsage = caUsage
 )
 
-func genCert(ca *tls.Certificate, names []string) (*tls.Certificate, error) {
+func GenCert(ca *tls.Certificate, names []string) (*tls.Certificate, error) {
 	now := time.Now().Add(-1 * time.Hour).UTC()
 	if !ca.Leaf.IsCA {
 		return nil, errors.New("CA cert is not a CA")
