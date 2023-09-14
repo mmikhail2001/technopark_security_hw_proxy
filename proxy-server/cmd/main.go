@@ -15,8 +15,6 @@ import (
 	"github.com/mmikhail2001/technopark_security_hw_proxy/proxy-server/pkg/mongoclient"
 )
 
-const URI = "mongodb://root:root@localhost:27017"
-
 var (
 	hostname, _ = os.Hostname()
 
@@ -24,6 +22,8 @@ var (
 	keyFile  = path.Join(dir, "ca-key.pem")
 	certFile = path.Join(dir, "ca-cert.pem")
 )
+
+const URI = "mongodb://root:root@localhost:27017"
 
 func main() {
 	client, closeConn, err := mongoclient.NewMongoClient(URI)
@@ -49,12 +49,11 @@ func main() {
 			MinVersion: tls.VersionTLS12,
 			//CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA},
 		},
+		Wrap: middleware.Save,
 	}
 
-	chainHandlers := middleware.Log(middleware.Save(proxyHandler))
-
 	log.Println("listen :8080")
-	log.Fatal(http.ListenAndServe(":8080", chainHandlers))
+	log.Fatal(http.ListenAndServe(":8080", proxyHandler))
 }
 
 func loadCA() (cert tls.Certificate, err error) {

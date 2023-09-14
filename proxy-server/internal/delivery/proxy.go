@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"time"
@@ -10,6 +11,8 @@ import (
 // Forward proxy
 // - подменяет сертификат для каждого соединения
 type Proxy struct {
+	// middleware для запросов через proxy
+	Wrap func(upstream http.Handler) http.Handler
 	// - корневой сертификат
 	// - подписывает сертификаты под каждый сервер назначения
 	CA *tls.Certificate
@@ -26,7 +29,9 @@ type Proxy struct {
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "CONNECT" {
 		// HTTPS соединение
+		fmt.Println("START CONNECT from ", r.URL)
 		p.serveConnect(w, r)
+		fmt.Println("END CONNECT from ", r.URL)
 		return
 	}
 	// HTTP соединение
@@ -35,7 +40,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Director:      httpDirector,
 		FlushInterval: p.FlushInterval,
 	}
-	reverseProxy.ServeHTTP(w, r)
+	p.Wrap(reverseProxy).ServeHTTP(w, r)
 }
 
 func httpDirector(r *http.Request) {
@@ -43,6 +48,7 @@ func httpDirector(r *http.Request) {
 	r.URL.Scheme = "http"
 }
 
+// Host и Scheme пустые до вызова
 func httpsDirector(r *http.Request) {
 	r.URL.Host = r.Host
 	r.URL.Scheme = "https"
