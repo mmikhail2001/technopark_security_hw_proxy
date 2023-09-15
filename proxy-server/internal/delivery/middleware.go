@@ -105,19 +105,6 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 
 		recorder := &customRecorder{ResponseWriter: w}
 
-		// cancel compress
-		r.Header.Del("Accept-Encoding")
-		// recorder.Header().Set("Content-Encoding", "identity")
-		objectID := primitive.NewObjectID()
-		// recorder.Header().Set("X-Transaction-Id", objectID.Hex())
-
-		reqGetParams := parseReqGetParams(r)
-		reqHeaders := parseReqHeaders(r)
-		reqCookies := parseReqCookies(r)
-		reqPostParams := parseReqPostParams(r)
-
-		var err error
-		var reqBody []byte
 		// reqBody, err := io.ReadAll(r.Body)
 		// if err != nil {
 		// 	http.Error(w, "Error while reading request", http.StatusInternalServerError)
@@ -129,6 +116,21 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 		// 	body:    reqBody,
 		// }
 		// r.Body = wrappedReq
+
+		// cancel compress
+		r.Header.Del("Accept-Encoding")
+		recorder.Header().Set("Content-Encoding", "identity")
+		objectID := primitive.NewObjectID()
+		recorder.Header().Set("X-Transaction-Id", objectID.Hex())
+
+		reqGetParams := parseReqGetParams(r)
+		reqHeaders := parseReqHeaders(r)
+		reqCookies := parseReqCookies(r)
+		// reqPostParams := parseReqPostParams(r)
+
+		var err error
+		var reqBody []byte
+		var reqPostParams map[string]string
 
 		var protocol string
 		if isSecure {
