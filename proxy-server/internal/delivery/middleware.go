@@ -107,9 +107,9 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 
 		// cancel compress
 		r.Header.Del("Accept-Encoding")
-		recorder.Header().Set("Content-Encoding", "identity")
+		// recorder.Header().Set("Content-Encoding", "identity")
 		objectID := primitive.NewObjectID()
-		recorder.Header().Set("X-Transaction-Id", objectID.Hex())
+		// recorder.Header().Set("X-Transaction-Id", objectID.Hex())
 
 		reqGetParams := parseReqGetParams(r)
 		reqHeaders := parseReqHeaders(r)
