@@ -2,8 +2,10 @@ package delivery
 
 import (
 	"bytes"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/mmikhail2001/technopark_security_hw_proxy/pkg/domain"
@@ -64,14 +66,11 @@ func parseReqGetParams(r *http.Request) map[string]string {
 	return data
 }
 
-func parseReqPostParams(r *http.Request) map[string]string {
-	err := r.ParseForm()
-	if err != nil {
-		log.Println(err)
-	}
+func parseReqPostParams(requestBody []byte) map[string]string {
+	form, _ := url.ParseQuery(string(requestBody))
 
 	data := make(map[string]string)
-	for key, values := range r.PostForm {
+	for key, values := range form {
 		data[key] = values[0]
 	}
 	return data
@@ -105,17 +104,11 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 
 		recorder := &customRecorder{ResponseWriter: w}
 
-		// reqBody, err := io.ReadAll(r.Body)
-		// if err != nil {
-		// 	http.Error(w, "Error while reading request", http.StatusInternalServerError)
-		// 	return
-		// }
-		// defer r.Body.Close()
-		// wrappedReq := &wrappedRequest{
-		// 	Request: r,
-		// 	body:    reqBody,
-		// }
-		// r.Body = wrappedReq
+		reqBody, _ := ioutil.ReadAll(r.Body)
+		// rdr1 := ioutil.NopCloser(bytes.NewBuffer(reqBody))
+		rdr2 := ioutil.NopCloser(bytes.NewBuffer(reqBody))
+
+		r.Body = rdr2
 
 		// cancel compress
 		r.Header.Del("Accept-Encoding")
@@ -126,11 +119,11 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 		reqGetParams := parseReqGetParams(r)
 		reqHeaders := parseReqHeaders(r)
 		reqCookies := parseReqCookies(r)
-		// reqPostParams := parseReqPostParams(r)
+		reqPostParams := parseReqPostParams(reqBody)
 
 		var err error
-		var reqBody []byte
-		var reqPostParams map[string]string
+		// var reqBody []byte
+		// var reqPostParams map[string]string
 
 		var protocol string
 		if isSecure {
@@ -140,6 +133,8 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 		}
 
 		upstream.ServeHTTP(recorder, r)
+
+		// TODO: textBody
 
 		transaction := domain.HTTPTransaction{
 			ID:   objectID,
