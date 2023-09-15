@@ -1,8 +1,11 @@
-module github.com/mmikhail2001/technopark_security_hw_proxy/proxy-server
+module github.com/mmikhail2001/technopark_security_hw_proxy
 
 go 1.20
 
-require go.mongodb.org/mongo-driver v1.12.1
+require (
+	github.com/gorilla/mux v1.8.0
+	go.mongodb.org/mongo-driver v1.12.1
+)
 
 require (
 	github.com/golang/snappy v0.0.1 // indirect

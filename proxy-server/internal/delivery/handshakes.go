@@ -92,7 +92,7 @@ func (p *Proxy) serveConnect(w http.ResponseWriter, r *http.Request) {
 	ch := make(chan int)
 	clientConnFastClose := &onCloseConn{clientConn, func() { ch <- 0 }}
 	// слушатель, который принимает только одно соединение и затем считается закрытым.
-	http.Serve(&oneShotListener{clientConnFastClose}, p.Wrap(reverseProxy))
+	http.Serve(&oneShotListener{clientConnFastClose}, p.Wrap(reverseProxy, true))
 	<-ch
 }
 

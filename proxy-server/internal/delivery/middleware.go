@@ -1,12 +1,13 @@
 package delivery
 
 import (
-	"fmt"
+	"bytes"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/mmikhail2001/technopark_security_hw_proxy/proxy-server/internal/domain"
+	"github.com/mmikhail2001/technopark_security_hw_proxy/pkg/domain"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Middleware struct {
@@ -57,7 +58,6 @@ func parseReqCookies(r *http.Request) map[string]string {
 func parseReqGetParams(r *http.Request) map[string]string {
 	data := make(map[string]string)
 	query := r.URL.Query()
-	fmt.Println("query ==", query)
 	for key, values := range query {
 		data[key] = values[0]
 	}
@@ -67,7 +67,7 @@ func parseReqGetParams(r *http.Request) map[string]string {
 func parseReqPostParams(r *http.Request) map[string]string {
 	err := r.ParseForm()
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 	}
 
 	data := make(map[string]string)
@@ -85,46 +85,88 @@ func parseResHeaders(w http.ResponseWriter) map[string]string {
 	return data
 }
 
-func (mw *Middleware) Save(upstream http.Handler) http.Handler {
+type wrappedRequest struct {
+	*http.Request
+	body []byte
+}
+
+func (wr *wrappedRequest) Read(p []byte) (n int, err error) {
+	return bytes.NewReader(wr.body).Read(p)
+}
+
+func (wr *wrappedRequest) Close() error {
+	return nil
+}
+
+func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.Method, r.Host, r.URL.Path)
-		r.Header.Set("X-Test", "test")
+		r.Header.Set("X-Proxy", "yes")
 
 		recorder := &customRecorder{ResponseWriter: w}
 
 		// cancel compress
 		r.Header.Del("Accept-Encoding")
 		recorder.Header().Set("Content-Encoding", "identity")
+		objectID := primitive.NewObjectID()
+		recorder.Header().Set("X-Transaction-Id", objectID.Hex())
 
-		getParams := parseReqGetParams(r)
-		headers := parseReqHeaders(r)
-		cookies := parseReqCookies(r)
-		postParams := parseReqPostParams(r)
+		reqGetParams := parseReqGetParams(r)
+		reqHeaders := parseReqHeaders(r)
+		reqCookies := parseReqCookies(r)
+		reqPostParams := parseReqPostParams(r)
+
+		var err error
+		var reqBody []byte
+		// reqBody, err := io.ReadAll(r.Body)
+		// if err != nil {
+		// 	http.Error(w, "Error while reading request", http.StatusInternalServerError)
+		// 	return
+		// }
+		// defer r.Body.Close()
+		// wrappedReq := &wrappedRequest{
+		// 	Request: r,
+		// 	body:    reqBody,
+		// }
+		// r.Body = wrappedReq
+
+		var protocol string
+		if isSecure {
+			protocol = "https"
+		} else {
+			protocol = "http"
+		}
 
 		upstream.ServeHTTP(recorder, r)
 
 		transaction := domain.HTTPTransaction{
+			ID:   objectID,
 			Time: time.Now(),
 			Request: domain.Request{
 				Host:       r.Host,
 				Method:     r.Method,
 				Version:    r.Proto,
 				Path:       r.URL.Path,
-				Headers:    headers,
-				Cookies:    cookies,
-				GetParams:  getParams,
-				PostParams: postParams,
+				Headers:    reqHeaders,
+				Cookies:    reqCookies,
+				Protocol:   protocol,
+				GetParams:  reqGetParams,
+				PostParams: reqPostParams,
+				RawBody:    reqBody,
 			},
 			Response: domain.Response{
-				StatusCode: recorder.code,
-				Body:       recorder.response,
-				Headers:    parseResHeaders(w),
+				StatusCode:    recorder.code,
+				RawBody:       recorder.response,
+				Headers:       parseResHeaders(w),
+				ContentLenght: len(recorder.response),
 			},
 		}
 
-		err := mw.repo.Add(transaction)
+		err = mw.repo.Add(transaction)
 		if err != nil {
+			http.Error(w, "Error to add request to db", http.StatusInternalServerError)
 			log.Println("error to add request to db", err)
+			return
 		}
 
 	})
