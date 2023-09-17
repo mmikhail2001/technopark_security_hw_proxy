@@ -2,10 +2,11 @@ package delivery
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/mmikhail2001/technopark_security_hw_proxy/pkg/domain"
@@ -84,31 +85,17 @@ func parseResHeaders(w http.ResponseWriter) map[string]string {
 	return data
 }
 
-type wrappedRequest struct {
-	*http.Request
-	body []byte
-}
-
-func (wr *wrappedRequest) Read(p []byte) (n int, err error) {
-	return bytes.NewReader(wr.body).Read(p)
-}
-
-func (wr *wrappedRequest) Close() error {
-	return nil
-}
-
 func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.Method, r.Host, r.URL.Path)
-		r.Header.Set("X-Proxy", "yes")
+		r.Header.Set("X-From-Proxy", "yes")
 
 		recorder := &customRecorder{ResponseWriter: w}
 
-		reqBody, _ := ioutil.ReadAll(r.Body)
-		// rdr1 := ioutil.NopCloser(bytes.NewBuffer(reqBody))
-		rdr2 := ioutil.NopCloser(bytes.NewBuffer(reqBody))
+		reqBody, _ := io.ReadAll(r.Body)
+		bodyReader := io.NopCloser(bytes.NewBuffer(reqBody))
 
-		r.Body = rdr2
+		r.Body = bodyReader
 
 		// cancel compress
 		r.Header.Del("Accept-Encoding")
@@ -122,8 +109,6 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 		reqPostParams := parseReqPostParams(reqBody)
 
 		var err error
-		// var reqBody []byte
-		// var reqPostParams map[string]string
 
 		var protocol string
 		if isSecure {
@@ -134,7 +119,12 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 
 		upstream.ServeHTTP(recorder, r)
 
-		// TODO: textBody
+		var resTextBody string
+		// TODO:
+		if strings.Contains(reqHeaders["Content-Type"], "text") ||
+			(strings.Contains(reqHeaders["Content-Type"], "application") && !strings.Contains(reqHeaders["Content-Type"], "application/octet-stream")) {
+			resTextBody = string(recorder.response)
+		}
 
 		transaction := domain.HTTPTransaction{
 			ID:   objectID,
@@ -154,6 +144,7 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 			Response: domain.Response{
 				StatusCode:    recorder.code,
 				RawBody:       recorder.response,
+				TextBody:      resTextBody,
 				Headers:       parseResHeaders(w),
 				ContentLenght: len(recorder.response),
 			},
