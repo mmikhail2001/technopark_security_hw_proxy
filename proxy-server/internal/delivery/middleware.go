@@ -106,7 +106,12 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 		reqGetParams := parseReqGetParams(r)
 		reqHeaders := parseReqHeaders(r)
 		reqCookies := parseReqCookies(r)
-		reqPostParams := parseReqPostParams(reqBody)
+
+		reqPostParams := make(map[string]string)
+		// else BSON element key cannot contain null bytes ...
+		if reqHeaders["Content-Type"] == "application/x-www-form-urlencoded" {
+			reqPostParams = parseReqPostParams(reqBody)
+		}
 
 		var err error
 

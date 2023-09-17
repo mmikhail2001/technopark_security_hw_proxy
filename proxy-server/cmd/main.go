@@ -9,10 +9,10 @@ import (
 	"os"
 	"path"
 
+	"github.com/mmikhail2001/technopark_security_hw_proxy/pkg/mongoclient"
 	"github.com/mmikhail2001/technopark_security_hw_proxy/pkg/repository"
 	"github.com/mmikhail2001/technopark_security_hw_proxy/proxy-server/internal/delivery"
 	pkgCert "github.com/mmikhail2001/technopark_security_hw_proxy/proxy-server/pkg/cert"
-	"github.com/mmikhail2001/technopark_security_hw_proxy/proxy-server/pkg/mongoclient"
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 	certFile = path.Join(dir, "ca-cert.pem")
 )
 
-const URI = "mongodb://root:root@localhost:27017"
+const URI = "mongodb://root:root@mongo:27017"
 
 func main() {
 	log.SetPrefix("[PROXY] ")

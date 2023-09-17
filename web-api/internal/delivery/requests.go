@@ -15,6 +15,7 @@ import (
 const (
 	attackVector           = `vulnerable'"><img src onerror=alert()>`
 	resHeaderTransactionID = "X-Transaction-Id"
+	proxyURL               = "http://127.0.0.1:8080"
 )
 
 type Handler struct {
@@ -97,6 +98,7 @@ func (h *Handler) ScanByID(w http.ResponseWriter, r *http.Request) {
 
 	transactionsIDs := []string{}
 
+	// TODO: need refactor
 	for key, value := range transaction.Request.GetParams {
 		transaction.Request.GetParams[key] = `vulnerable'"><img src onerror=alert()>`
 		resRepeat, err := RepeatRequest(transaction)
@@ -209,7 +211,7 @@ func (h *Handler) RepeatByID(w http.ResponseWriter, r *http.Request) {
 // extra funcs
 
 func RepeatRequest(transaction domain.HTTPTransaction) (*http.Response, error) {
-	proxyURL, err := url.Parse("http://127.0.0.1:8080")
+	proxyURL, err := url.Parse(proxyURL)
 	if err != nil {
 		return nil, err
 	}
