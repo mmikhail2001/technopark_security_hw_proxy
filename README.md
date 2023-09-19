@@ -19,9 +19,15 @@
 
 ## Использование
 
+- `curl -x 127.0.0.1:8080 -v http://example.com`
 - `curl -x 127.0.0.1:8080 -v https://mail.ru`
 - web-api 127.0.0.1:8000 имеет ручки: `/requests, /requests/{id}, /repeat/{id}, /scan/{id}` 
 - использование в браузере firefox: указать адрес прокси (настройки -> прокси), импортировать сертификат (настройки -> сертикаты -> импорт ca-cert.pem)
 
+## Использование web-api
+ 
+![image](https://github.com/mmikhail2001/technopark_security_hw_proxy/assets/71098937/aa32906d-f5ae-49bf-8950-15b419bca8b1)
 
-
+## Пример уязвимого сервера 
+- `vulnerable-test-server` -- уязвимый сервер, написанный на golang. Отправляет в теле ответа get-параметры без валидации.
+  
