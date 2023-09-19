@@ -1,3 +1,4 @@
+#  для локального разворачивания сервисов
 #  make -B build
 build:
 	go build -o ./build/proxy/out proxy-server/cmd/main.go 		&& \

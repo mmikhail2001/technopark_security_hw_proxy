@@ -21,11 +21,10 @@ services:
   proxy:
     build:
       context: .
-      dockerfile: services-dockerfile
+      dockerfile: proxy-dockerfile
     restart: always
     ports:
-      - 8080:8080
-      - 443:443
+      - 8081:8081
     links:
       - mongo:mongo
     depends_on:
@@ -39,7 +38,7 @@ services:
   webapi:
     build:
       context: .
-      dockerfile: services-dockerfile
+      dockerfile: webapi-dockerfile
     restart: always
     ports:
       - 8000:8000

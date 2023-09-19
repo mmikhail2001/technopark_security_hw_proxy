@@ -15,7 +15,7 @@ import (
 const (
 	attackVector           = `vulnerable'"><img src onerror=alert()>`
 	resHeaderTransactionID = "X-Transaction-Id"
-	proxyURL               = "http://127.0.0.1:8080"
+	proxyURL               = "http://proxy:8080"
 )
 
 type Handler struct {

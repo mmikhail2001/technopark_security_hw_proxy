@@ -1,0 +1,10 @@
+FROM golang:1.21
+
+WORKDIR /app
+
+COPY . /app
+
+RUN go build web-api/cmd/main.go
+
+# Command to run the executable
+CMD ["./main"]
