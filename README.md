@@ -1,6 +1,6 @@
 # technopark_security_hw_proxy
 
-## Запуск прокси-сервера и web api на хосте
+## Запуск прокси-сервера и web api на хосте, бд в докере
 
 - переименовать `docker-compose-mongo.yml` в `docker-compose.yml`
 - `docker compose up` -- запуск mongodb (слушает порт 27017)
@@ -8,7 +8,7 @@
 - `./build/proxy/out` -- запуск прокси-сервера (слушает порт 8080)
 - `./build/webapi/out` -- запуск web-api (слушает порт 8000)
 
-## Запуск прокси-сервера и web api в докере
+## Запуск прокси-сервера, web api и бд в докере
 
 - `docker compose up` -- сборка и запуск трех контейнеров: proxy, webapi, mongo. Контейнеры слушают порты 8080, 8000 и 27017 соответственно. 
 
