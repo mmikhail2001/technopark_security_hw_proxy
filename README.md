@@ -23,8 +23,9 @@
 - `curl -x 127.0.0.1:8080 -v https://mail.ru`
 - web-api 127.0.0.1:8000 имеет **ручки**: `/requests, /requests/{id}, /repeat/{id}, /scan/{id}` 
 - использование в браузере **firefox**: указать адрес прокси (настройки -> прокси), импортировать сертификат (настройки -> сертикаты -> импорт ca-cert.pem). Браузер работает в штатном режиме, любые запросы имеют успех, включая login, logout.
-- Вход в сервис Google Аккаунт.
-- ![image](https://github.com/mmikhail2001/technopark_security_hw_proxy/assets/71098937/23caaa7d-683f-4457-b6ff-a2ba59c83ecd)
+- Вход в сервис Google Аккаунт. Интерфейс MongoDB Compass.
+- ![image](https://github.com/mmikhail2001/technopark_security_hw_proxy/assets/71098937/2b08b213-7b85-49c4-8421-d0daacef9af5)
+
 
 
 ## Использование web-api
