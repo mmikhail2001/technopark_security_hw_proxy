@@ -10,6 +10,7 @@ import (
 // curl -x 127.0.0.1:8080 127.0.0.1/?name=mikhail
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.Host, r.URL.Path, r.Method)
 	params := r.URL.Query()
 	name := params.Get("name")
 	response := fmt.Sprintf("Hello, %s!", name)
@@ -19,5 +20,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", handler)
+	log.Println("listen :80")
 	log.Fatal(http.ListenAndServe(":80", nil))
 }

@@ -124,10 +124,12 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 
 		upstream.ServeHTTP(recorder, r)
 
+		resHeaders := parseResHeaders(recorder)
+
 		var resTextBody string
 		// TODO:
-		if strings.Contains(reqHeaders["Content-Type"], "text") ||
-			(strings.Contains(reqHeaders["Content-Type"], "application") && !strings.Contains(reqHeaders["Content-Type"], "application/octet-stream")) {
+		if strings.Contains(resHeaders["Content-Type"], "text") ||
+			(strings.Contains(resHeaders["Content-Type"], "application") && !strings.Contains(resHeaders["Content-Type"], "application/octet-stream")) {
 			resTextBody = string(recorder.response)
 		}
 
@@ -150,7 +152,7 @@ func (mw *Middleware) Save(upstream http.Handler, isSecure bool) http.Handler {
 				StatusCode:    recorder.code,
 				RawBody:       recorder.response,
 				TextBody:      resTextBody,
-				Headers:       parseResHeaders(w),
+				Headers:       resHeaders,
 				ContentLenght: len(recorder.response),
 			},
 		}
