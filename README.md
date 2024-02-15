@@ -1,5 +1,7 @@
 # technopark_security_hw_proxy
 
+[ТЗ](https://docs.google.com/document/d/1QaQ-Nc_eE4dBKZwQbA4E2o8pOJ3CktgsKDAn375iY24/edit)
+
 ## Запуск прокси-сервера и web api на хосте, бд в докере
 
 - переименовать `docker-compose-mongo.yml` в `docker-compose.yml`
